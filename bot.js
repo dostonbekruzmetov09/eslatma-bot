@@ -5,6 +5,13 @@ const path = require('path');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const DATA_FILE = path.join(__dirname, 'data.json');
+const http = require('http');
+
+// Serverni uyg'oq tutish uchun kichik server (Render kabi hostlar uchun)
+http.createServer((req, res) => {
+    res.write('Bot is running!');
+    res.end();
+}).listen(process.env.PORT || 3000);
 
 // Admin ID
 const ADMIN_ID = 6756534512;
@@ -35,17 +42,19 @@ const months = [
 // Eslatmalarni tekshirish (har daqiqada)
 setInterval(() => {
     const now = new Date();
+    // UTC+5 vaqtini hisoblash (O'zbekiston uchun)
+    const nowTashkent = new Date(now.getTime() + (5 * 60 * 60 * 1000));
+    
     Object.keys(usersData).forEach(userId => {
         if (usersData[userId].reminders) {
             usersData[userId].reminders.forEach(async (r) => {
-                const rDate = new Date(r.timestamp);
-                if (r.status === '⏳ Kutilmoqda' && rDate <= now) {
+                if (r.status === '⏳ Kutilmoqda' && r.timestamp <= now.getTime()) {
                     try {
-                        const delayMs = now - rDate;
+                        const delayMs = now.getTime() - r.timestamp;
                         const delayMin = Math.floor(delayMs / 60000); 
                         
                         let message = `🔔 DIQQAT, ESLATMA!\n\n📌 Vazifa: ${r.task}\n⏰ Belgilangan vaqt: ${r.date}`;
-                        if (delayMin >= 1) {
+                        if (delayMin >= 2) { // 2 daqiqadan ko'p kechiksa bildirish
                             message += `\n\n⚠️ Uzr, texnik sabablarga ko'ra eslatmangiz ${delayMin} daqiqa kechikib yuborildi.`;
                         }
                         
@@ -59,10 +68,16 @@ setInterval(() => {
             });
         }
     });
-}, 60000); 
+}, 30000); // Har 30 soniyada tekshirish aniqroq ishlashi uchun
 
 bot.command('me', (ctx) => {
     ctx.reply(`Sizning ID-ingiz: ${ctx.from.id}`);
+});
+
+bot.command('time', (ctx) => {
+    const now = new Date();
+    const tashkentTime = new Date(now.getTime() + (5 * 60 * 60 * 1000));
+    ctx.reply(`🖥 Server vaqti (UTC): ${now.toUTCString()}\n🇺🇿 O'zbekiston vaqti: ${tashkentTime.toISOString().replace('T', ' ').substring(0, 19)}`);
 });
 
 bot.start((ctx) => {
@@ -135,10 +150,13 @@ bot.on('text', async (ctx) => {
         const now = new Date();
         let year = now.getFullYear();
         
-        let reminderDate = new Date(year, ctx.session.month, ctx.session.day, hours, minutes);
+        // Tashkent vaqti (UTC+5) bo'yicha timestamp yaratish
+        // User kirigan vaqtdan 5 soat ayiramizki, u UTC dagi mos vaqtga aylansin
+        let reminderDate = new Date(Date.UTC(year, ctx.session.month, ctx.session.day, hours - 5, minutes));
         
         if (reminderDate <= now) {
-            reminderDate.setFullYear(year + 1);
+            // Agar vaqt o'tib ketgan bo'lsa (bugun uchun), keyingi yilga o'tkazish
+            reminderDate = new Date(Date.UTC(year + 1, ctx.session.month, ctx.session.day, hours - 5, minutes));
             year = year + 1;
         }
 
