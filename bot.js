@@ -42,14 +42,14 @@ setInterval(() => {
                 if (r.status === '⏳ Kutilmoqda' && rDate <= now) {
                     try {
                         const delayMs = now - rDate;
-                        const delayMin = Math.floor(delayMs / 60000); // Kechikishni daqiqada hisoblash
+                        const delayMin = Math.floor(delayMs / 60000); 
                         
-                        let message = `🔔 **DIQQAT, ESLATMA!**\n\n📌 **Vazifa:** ${r.task}\n⏰ **Belgilangan vaqt:** ${r.date}`;
+                        let message = `🔔 DIQQAT, ESLATMA!\n\n📌 Vazifa: ${r.task}\n⏰ Belgilangan vaqt: ${r.date}`;
                         if (delayMin >= 1) {
-                            message += `\n\n⚠️ *Uzr, texnik sabablarga ko'ra eslatmangiz ${delayMin} daqiqa kechikib yuborildi.*`;
+                            message += `\n\n⚠️ Uzr, texnik sabablarga ko'ra eslatmangiz ${delayMin} daqiqa kechikib yuborildi.`;
                         }
                         
-                        await bot.telegram.sendMessage(userId, message, { parse_mode: 'Markdown' });
+                        await bot.telegram.sendMessage(userId, message);
                         r.status = '✅ Bajarildi';
                         saveData(usersData);
                     } catch (e) {
@@ -59,7 +59,7 @@ setInterval(() => {
             });
         }
     });
-}, 60000); // 1 daqiqa
+}, 60000); 
 
 bot.command('me', (ctx) => {
     ctx.reply(`Sizning ID-ingiz: ${ctx.from.id}`);
@@ -82,7 +82,7 @@ bot.start((ctx) => {
     let buttons = [[Markup.button.callback('➕ Yangi eslatma belgilash', 'set_reminder')], [Markup.button.callback('📂 Mening eslatmalarim', 'my_reminders')]];
     if (userId === ADMIN_ID) buttons.push([Markup.button.callback('👑 Admin Panel', 'admin_panel')]);
 
-    ctx.reply('✨ Assalomu alaykum, xush kelibsiz! \n\nMen sizning shaxsiy ⏰ **Eslatma botingizman**.', Markup.inlineKeyboard(buttons));
+    ctx.reply('✨ Assalomu alaykum, xush kelibsiz! \n\nMen sizning shaxsiy ⏰ Eslatma botingizman.', Markup.inlineKeyboard(buttons));
 });
 
 bot.action('set_reminder', (ctx) => {
@@ -91,7 +91,7 @@ bot.action('set_reminder', (ctx) => {
     if (!usersData[userId]) usersData[userId] = { id: userId, first_name: ctx.from.first_name, reminders: [] };
     usersData[userId].current_draft = { step: '📝 Vazifani yozmoqda...' };
     saveData(usersData);
-    ctx.reply('📝 **Eslatma matnini yozing:**');
+    ctx.reply('📝 Eslatma matnini yozing:');
 });
 
 bot.on('text', async (ctx) => {
@@ -113,10 +113,10 @@ bot.on('text', async (ctx) => {
                 Markup.button.callback(`📅 ${months[i+2]}`, `month_${i+2}`)
             ]);
         }
-        ctx.reply('🗓 **Oyni tanlang:**', Markup.inlineKeyboard(monthButtons));
+        ctx.reply('🗓 Oyni tanlang:', Markup.inlineKeyboard(monthButtons));
     } else if (step === 'waiting_for_day') {
         const day = parseInt(ctx.message.text);
-        if (isNaN(day) || day < 1 || day > 31) return ctx.reply('❌ **Noto\'g\'ri sana!**');
+        if (isNaN(day) || day < 1 || day > 31) return ctx.reply('❌ Noto\'g\'ri sana!');
         
         ctx.session.day = day;
         ctx.session.step = 'waiting_for_time';
@@ -125,20 +125,18 @@ bot.on('text', async (ctx) => {
         usersData[userId].current_draft.step = '🕒 Vaqtni kiritmoqda...';
         saveData(usersData);
 
-        ctx.reply('🕒 **Vaqtni kiriting (masalan 13:00):**');
+        ctx.reply('🕒 Vaqtni kiriting (masalan 13:00):');
     } else if (step === 'waiting_for_time') {
         const timeStr = ctx.message.text;
         const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-        if (!timeRegex.test(timeStr)) return ctx.reply('⚠️ **Noto\'g\'ri format!**');
+        if (!timeRegex.test(timeStr)) return ctx.reply('⚠️ Noto\'g\'ri format!');
 
         const [hours, minutes] = timeStr.split(':').map(Number);
         const now = new Date();
         let year = now.getFullYear();
         
-        // Sanani hisoblash (yil avtomatik tarzda joriy yoki kelasi yil bo'ladi)
         let reminderDate = new Date(year, ctx.session.month, ctx.session.day, hours, minutes);
         
-        // Agar tanlangan vaqt hozirgidan o'tib ketgan bo'lsa, avtomatik kelasi yilga suriladi
         if (reminderDate <= now) {
             reminderDate.setFullYear(year + 1);
             year = year + 1;
@@ -156,33 +154,36 @@ bot.on('text', async (ctx) => {
         delete usersData[userId].current_draft;
         saveData(usersData);
 
-        ctx.reply(`✅ **Eslatma saqlandi!**\n📅 **Sana:** ${ctx.session.day}-${months[ctx.session.month]} ${year}-yil\n🕒 **Vaqt:** ${timeStr}\n📝 **Vazifa:** ${taskName}`);
+        ctx.reply(`✅ Eslatma saqlandi!\n📅 Sana: ${ctx.session.day}-${months[ctx.session.month]} ${year}-yil\n🕒 Vaqt: ${timeStr}\n📝 Vazifa: ${taskName}`);
         ctx.session = {}; 
     }
 });
 
 bot.action(/^month_(\d+)$/, (ctx) => {
+    const userId = ctx.from.id;
     const monthIndex = parseInt(ctx.match[1]);
     ctx.session.month = monthIndex;
     ctx.session.step = 'waiting_for_day';
     
-    usersData[ctx.from.id].current_draft.month = months[monthIndex];
-    usersData[ctx.from.id].current_draft.step = '🔢 Sanani kiritmoqda...';
+    if (!usersData[userId]) usersData[userId] = { id: userId, first_name: ctx.from.first_name, reminders: [] };
+    if (!usersData[userId].current_draft) usersData[userId].current_draft = {};
+    
+    usersData[userId].current_draft.month = months[monthIndex];
+    usersData[userId].current_draft.step = '🔢 Sanani kiritmoqda...';
     saveData(usersData);
 
-    ctx.editMessageText(`✅ **${months[monthIndex]}** tanlandi. \n🔢 **Sanani yozing:**`);
+    ctx.editMessageText(`✅ ${months[monthIndex]} tanlandi. \n🔢 Sanani yozing:`);
 });
 
-// "Mening eslatmalarim" funksiyasi
 bot.action('my_reminders', (ctx) => {
     const userId = ctx.from.id;
     const u = usersData[userId];
     if (!u || !u.reminders || u.reminders.length === 0) {
-        return ctx.reply('📂 **Sizda hali eslatmalar yo\'q.**');
+        return ctx.reply('📂 Sizda hali eslatmalar yo\'q.');
     }
     
-    let list = '📂 **Sizning eslatmalaringiz:**\n\n';
-    u.reminders.slice(-10).forEach((r, i) => { // Oxirgi 10 tasini ko'rsatish
+    let list = '📂 Sizning eslatmalaringiz:\n\n';
+    u.reminders.slice(-10).forEach((r, i) => { 
         list += `${i+1}. [${r.date}] ${r.task} (${r.status})\n`;
     });
     
@@ -206,15 +207,15 @@ bot.action(/^user_info_(\d+)$/, (ctx) => {
     const targetUserId = parseInt(ctx.match[1]);
     const u = usersData[targetUserId];
     
-    let info = `👤 **Ism:** ${u.first_name}\n🆔 **ID:** ${u.id}\n`;
+    let info = `👤 Ism: ${u.first_name}\n🆔 ID: ${u.id}\n`;
     
     if (u.current_draft) {
-        info += `\n🔄 **Hozirgi jarayon (Draft):**\n- Holat: ${u.current_draft.step || 'Noma\'lum'}\n`;
+        info += `\n🔄 Hozirgi jarayon (Draft):\n- Holat: ${u.current_draft.step || 'Noma\'lum'}\n`;
         if (u.current_draft.task) info += `- Matn: ${u.current_draft.task}\n`;
         if (u.current_draft.month) info += `- Oy: ${u.current_draft.month}\n`;
     }
 
-    info += `\n📅 **Eslatmalar:**\n` + (u.reminders || []).map((r, i) => `${i+1}. [${r.date}] ${r.task} (${r.status})`).join('\n');
+    info += `\n📅 Eslatmalar:\n` + (u.reminders || []).map((r, i) => `${i+1}. [${r.date}] ${r.task} (${r.status})`).join('\n');
     
     ctx.reply(info || 'Ma\'lumot yo\'q', Markup.inlineKeyboard([[Markup.button.callback('⬅️ Orqaga', 'users_list')]]));
 });
