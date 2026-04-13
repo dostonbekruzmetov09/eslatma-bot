@@ -80,7 +80,7 @@ bot.start((ctx) => {
     ctx.session = {}; 
     
     let buttons = [[Markup.button.callback('➕ Yangi eslatma belgilash', 'set_reminder')], [Markup.button.callback('📂 Mening eslatmalarim', 'my_reminders')]];
-    if (userId === ADMIN_ID) buttons.push([Markup.button.callback('👑 Admin Panel', 'admin_panel')]);
+    if (userId === ADMIN_ID) buttons.push([Markup.button.callback('Admin Panel', 'admin_panel')]);
 
     ctx.reply('✨ Assalomu alaykum, xush kelibsiz! \n\nMen sizning shaxsiy ⏰ Eslatma botingizman.', Markup.inlineKeyboard(buttons));
 });
@@ -192,7 +192,7 @@ bot.action('my_reminders', (ctx) => {
 
 bot.action('admin_panel', (ctx) => {
     if (ctx.from.id !== ADMIN_ID) return;
-    ctx.reply('👑 Admin Panel:', Markup.inlineKeyboard([[Markup.button.callback('👥 Foydalanuvchilar', 'users_list')], [Markup.button.callback('⬅️ Orqaga', 'back_to_main')]]));
+    ctx.reply('Admin Panel:', Markup.inlineKeyboard([[Markup.button.callback('👥 Foydalanuvchilar', 'users_list')], [Markup.button.callback('⬅️ Orqaga', 'back_to_main')]]));
 });
 
 bot.action('users_list', (ctx) => {
@@ -223,7 +223,7 @@ bot.action(/^user_info_(\d+)$/, (ctx) => {
 bot.action('back_to_main', (ctx) => {
     ctx.session = {};
     let buttons = [[Markup.button.callback('➕ Yangi eslatma belgilash', 'set_reminder')], [Markup.button.callback('📂 Mening eslatmalarim', 'my_reminders')]];
-    if (ctx.from.id === ADMIN_ID) buttons.push([Markup.button.callback('👑 Admin Panel', 'admin_panel')]);
+    if (ctx.from.id === ADMIN_ID) buttons.push([Markup.button.callback('Admin Panel', 'admin_panel')]);
     ctx.editMessageText('✨ Asosiy menyu:', Markup.inlineKeyboard(buttons));
 });
 
